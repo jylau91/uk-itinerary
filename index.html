@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UK Road Trip Itinerary — Jul 2026</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --bg: #f8f6f1;
+    --surface: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #666;
+    --border: #e0ddd6;
+    --accent: #2c5f8a;
+    --accent-light: #e8f0f7;
+    --danger: #c0392b;
+    --green: #27ae60;
+    --amber: #e67e22;
+    --text-sm: 0.8rem;
+    --text-base: 0.95rem;
+    --text-lg: 1.1rem;
+    --radius: 8px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    padding: 24px 16px;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  @media (max-width: 860px) {
+    .container { grid-template-columns: 1fr; }
+  }
+
+  /* ── Header ── */
+  header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  header .badge {
+    background: var(--accent);
+    color: #fff;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  /* ── Itinerary table ── */
+  .itinerary-panel {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .itinerary-panel h2 {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--ink);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-base);
+  }
+
+  thead th {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--accent-light); }
+  tbody tr.active { background: var(--accent-light); }
+  tbody tr.active td:first-child { border-left: 3px solid var(--accent); }
+
+  td { padding: 10px 12px; vertical-align: top; }
+  td.date { font-weight: 700; white-space: nowrap; color: var(--accent); min-width: 90px; }
+  td.route { font-weight: 600; max-width: 180px; }
+  td.details { color: var(--muted); font-size: var(--text-sm); }
+  td.tag {
+    white-space: nowrap;
+    text-align: center;
+  }
+  .tag-pill {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .pill-drive { background: #fef3e2; color: var(--amber); }
+  .pill-base  { background: #e8f5e9; color: var(--green); }
+  .pill-scenic { background: #e3f2fd; color: #1976d2; }
+  .pill-buffer { background: #f3e5f5; color: #7b1fa2; }
+  .pill-fly    { background: #fce4ec; color: var(--danger); }
+
+  /* ── Map ── */
+  #map {
+    height: 600px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+
+  /* ── Day detail card (right column on mobile) ── */
+  .day-detail {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-top: 16px;
+    display: none;
+  }
+  .day-detail.visible { display: block; }
+  .day-detail h3 { font-size: var(--text-lg); margin-bottom: 8px; }
+  .day-detail .notes { font-size: var(--text-sm); color: var(--muted); margin-top: 8px; }
+  .day-detail .notes strong { color: var(--ink); }
+
+  /* ── Cycling toggle ── */
+  .cycling-toggle {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--accent-light);
+    border-radius: var(--radius);
+    border: 1px dashed var(--accent);
+    font-size: var(--text-sm);
+    color: var(--accent);
+  }
+  .cycling-toggle input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+  .cycling-toggle label { cursor: pointer; user-select: none; }
+
+  /* ── Legend ── */
+  .legend {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    font-size: var(--text-sm);
+    color: var(--muted);
+    padding: 4px 0;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Leaflet custom markers ── */
+  .numbered-icon {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .start-marker, .end-marker {
+    background: #27ae60;
+    color: #fff;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .end-marker { background: var(--danger); }
+
+  .leaflet-popup-content-wrapper { border-radius: 8px; }
+  .popup-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .popup-sub { font-size: 12px; color: #666; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <h1>🇬🇧 UK Road Trip — Jul 2026</h1>
+    <span class="badge">17 days · 10–26 Jul</span>
+  </header>
+
+  <!-- Cycling toggle -->
+  <div class="cycling-toggle">
+    <input type="checkbox" id="cyclingToggle">
+    <label for="cyclingToggle">🚴 Add cycling tour — Bath, 14 Jul morning (City &amp; Countryside guided tour, 10am)</label>
+  </div>
+
+  <!-- Itinerary table -->
+  <div class="itinerary-panel">
+    <h2>Itinerary</h2>
+    <table id="itinTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Location / Route</th>
+          <th>Plan</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-day="1" data-lat="51.5074" data-lon="-0.1278" data-title="London" data-sub="Fri 10 Jul">
+          <td class="date">Fri 10 Jul</td>
+          <td class="route">🇬🇧 London</td>
+          <td class="details">Arrive / settle in</td>
+          <td class="tag"><span class="tag-pill pill-base">Base</span></td>
+        </tr>
+        <tr data-day="2" data-lat="51.5074" data-lon="-0.1278" data-title="London — Day 2" data-sub="Sat 11 Jul">
+          <td class="date">Sat 11 Jul</td>
+          <td class="route">🇬🇧 London</td>
+          <td class="details">Landmarks + NHM 3pm</td>
+          <td class="tag"><span class="tag-pill pill-base">Base</span></td>
+        </tr>
+        <tr data-day="3" data-lat="51.5074" data-lon="-0.1278" data-title="London → Bath" data-sub="Sun 12 Jul · Drive day">
+          <td class="date">Sun 12 Jul</td>
+          <td class="route">London → Bath</td>
+          <td class="details">Travel towards Bath / flexi stop</td>
+          <td class="tag"><span class="tag-pill pill-drive">Drive</span></td>
+        </tr>
+        <tr data-day="4" data-lat="51.3811" data-lon="-2.3590" data-title="Bath — Sightseeing" data-sub="Mon 13 Jul">
+          <td class="date">Mon 13 Jul</td>
+          <td class="route">🇬🇧 Bath</td>
+          <td class="details">Royal Crescent, Roman Baths, Pulteney Bridge, Bath Abbey</td>
+          <td class="tag"><span class="tag-pill pill-base">Base</span></td>
+        </tr>
+        <tr data-day="5" data-lat="51.3811" data-lon="-2.3590" data-title="Bath — Flexible Day" data-sub="Tue 14 Jul · Flexible Bath day">
+          <td class="date">Tue 14 Jul</td>
+          <td class="route">🇬🇧 Bath</td>
+          <td class="details">Flexible Bath day · food / cafes / extra sightseeing</td>
+          <td class="tag"><span class="tag-pill pill-scenic">Scenic</span></td>
+        </tr>
+        <tr data-day="6" data-lat="50.2636" data-lon="-5.0527" data-title="Bath → Cornwall" data-sub="Wed 15 Jul · Via Exeter">
+          <td class="date">Wed 15 Jul</td>
+          <td class="route">Bath → Exeter → Cornwall</td>
+          <td class="details">Drive day with Exeter stop</td>
+          <td class="tag"><span class="tag-pill pill-drive">Drive</span></td>
+        </tr>
+        <tr data-day="7" data-lat="50.2636" data-lon="-5.0527" data-title="Cornwall" data-sub="Thu 16 Jul">
+          <td class="date">Thu 16 Jul</td>
+          <td class="route">🇬🇧 Cornwall</td>
+          <td class="details">Cornwall exploring day</td>
+          <td class="tag"><span class="tag-pill pill-scenic">Scenic</span></td>
+        </tr>
+        <tr data-day="8" data-lat="50.6580" data-lon="-4.7537" data-title="Cornwall → Tintagel → Exmoor" data-sub="Fri 17 Jul">
+          <td class="date">Fri 17 Jul</td>
+          <td class="route">Cornwall → Tintagel → Exmoor</td>
+          <td class="details">Tintagel · coastal drive · Exmoor arrival</td>
+          <td class="tag"><span class="tag-pill pill-drive">Drive</span></td>
+        </tr>
+        <tr data-day="9" data-lat="51.0167" data-lon="-3.2333" data-title="Exmoor → Glasbury / Brecon" data-sub="Sat 18 Jul">
+          <td class="date">Sat 18 Jul</td>
+          <td class="route">Exmoor → Glasbury / Brecon</td>
+          <td class="details">Travel into Wales / countryside</td>
+          <td class="tag"><span class="tag-pill pill-drive">Drive</span></td>
+        </tr>
+        <tr data-day="10" data-lat="51.9460" data-lon="-4.3014" data-title="Wales / Pembrokeshire" data-sub="Sun 19 Jul">
+          <td class="date">Sun 19 Jul</td>
+          <td class="route">🏴 Wales / Pembrokeshire</td>
+          <td class="details">Buffer / nature day</td>
+          <td class="tag"><span class="tag-pill pill-buffer">Buffer</span></td>
+        </tr>
+        <tr data-day="11" data-lat="51.6739" data-lon="-4.9043" data-title="Pembrokeshire" data-sub="Mon 20 Jul · ⚠️ Castlemartin firing closures 7:30am–4:45pm">
+          <td class="date">Mon 20 Jul</td>
+          <td class="route">🏴 Pembrokeshire</td>
+          <td class="details">Coastal day — ⚠️ St Govan's &amp; Green Bridge closed 7:30am–4:45pm</td>
+          <td class="tag"><span class="tag-pill pill-scenic">Scenic</span></td>
+        </tr>
+        <tr data-day="12" data-lat="52.4147" data-lon="-4.0816" data-title="Pembrokeshire → Aberystwyth → Snowdonia/Anglesey" data-sub="Tue 21 Jul · Big drive day">
+          <td class="date">Tue 21 Jul</td>
+          <td class="route">Pembrokeshire → Aberystwyth → Snowdonia</td>
+          <td class="details">Drive up west Wales coast · Aberystwyth stop</td>
+          <td class="tag"><span class="tag-pill pill-drive">Drive</span></td>
+        </tr>
+        <tr data-day="13" data-lat="53.0686" data-lon="-4.0760" data-title="Snowdonia / Anglesey" data-sub="Wed 22 Jul">
+          <td class="date">Wed 22 Jul</td>
+          <td class="route">🏴 Snowdonia / Anglesey</td>
+          <td class="details">North Wales scenery / activities</td>
+          <td class="tag"><span class="tag-pill pill-scenic">Scenic</span></td>
+        </tr>
+        <tr data-day="14" data-lat="53.4084" data-lon="-2.9916" data-title="North Wales → Liverpool" data-sub="Thu 23 Jul">
+          <td class="date">Thu 23 Jul</td>
+          <td class="route">North Wales → Liverpool</td>
+          <td class="details">Travel to Liverpool / evening there</td>
+          <td class="tag"><span class="tag-pill pill-drive">Drive</span></td>
+        </tr>
+        <tr data-day="15" data-lat="51.4104" data-lon="-2.5889" data-title="Liverpool → Warwick → Cambridge" data-sub="Fri 24 Jul">
+          <td class="date">Fri 24 Jul</td>
+          <td class="route">Liverpool → Warwick → Cambridge</td>
+          <td class="details">Warwick stop · then Cambridge</td>
+          <td class="tag"><span class="tag-pill pill-drive">Drive</span></td>
+        </tr>
+        <tr data-day="16" data-lat="52.2053" data-lon="0.1218" data-title="Cambridge → London" data-sub="Sat 25 Jul · Optional Cambridge bike tour AM">
+          <td class="date">Sat 25 Jul</td>
+          <td class="route">Cambridge → London</td>
+          <td class="details">Cambridge AM · return to London</td>
+          <td class="tag"><span class="tag-pill pill-drive">Drive</span></td>
+        </tr>
+        <tr data-day="17" data-lat="51.5074" data-lon="-0.1278" data-title="London — Fly Home" data-sub="Sun 26 Jul · Fly home">
+          <td class="date">Sun 26 Jul</td>
+          <td class="route">🇬🇧 London → 🏠</td>
+          <td class="details">Fly home</td>
+          <td class="tag"><span class="tag-pill pill-fly">Fly</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#27ae60"></div> Start</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Overnight stop</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#1976d2"></div> Scenic / buffer</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div> Drive day</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div> End / Fly home</div>
+  </div>
+
+  <!-- Day detail card (mobile) -->
+  <div class="day-detail" id="dayDetail">
+    <h3 id="detailTitle">—</h3>
+    <p id="detailSub" style="color:var(--muted);font-size:var(--text-sm)"></p>
+    <p class="notes" id="detailNotes"></p>
+  </div>
+
+</div>
+
+<script>
+// ── Waypoints ──────────────────────────────────────────────────────────────
+const stops = [
+  { day: 1,  lat: 51.5074,  lon: -0.1278,  title: "London",          sub: "Fri 10 Jul · Arrive" },
+  { day: 2,  lat: 51.5074,  lon: -0.1278,  title: "London",          sub: "Sat 11 Jul · Landmarks + NHM 3pm" },
+  { day: 3,  lat: 51.5074,  lon: -0.1278,  title: "→ Bath",         sub: "Sun 12 Jul · Travel day" },
+  { day: 4,  lat: 51.3811,  lon: -2.3590,  title: "Bath",            sub: "Mon 13 Jul · Sightseeing" },
+  { day: 5,  lat: 51.3811,  lon: -2.3590,  title: "Bath",            sub: "Tue 14 Jul · Flexible Bath day" },
+  { day: 6,  lat: 50.2636,  lon: -5.0527,  title: "→ Cornwall",     sub: "Wed 15 Jul · Via Exeter" },
+  { day: 7,  lat: 50.2660,  lon: -5.0500,  title: "Cornwall",       sub: "Thu 16 Jul · Exploring" },
+  { day: 8,  lat: 50.6580,  lon: -4.7537,  title: "→ Exmoor",      sub: "Fri 17 Jul · Tintagel coastal drive" },
+  { day: 9,  lat: 52.0500,  lon: -3.3000,  title: "→ Glasbury",     sub: "Sat 18 Jul · Into Wales" },
+  { day: 10, lat: 51.9460,  lon: -4.3014,  title: "Pembrokeshire", sub: "Sun 19 Jul · Nature day" },
+  { day: 11, lat: 51.6739,  lon: -4.9043,  title: "Pembrokeshire",  sub: "Mon 20 Jul · ⚠️ Firing closures 7:30am–4:45pm" },
+  { day: 12, lat: 52.4147,  lon: -4.0816,  title: "→ Aberystwyth",  sub: "Tue 21 Jul · West Wales coast" },
+  { day: 13, lat: 53.0686,  lon: -4.0760,  title: "Snowdonia",      sub: "Wed 22 Jul · N. Wales scenery" },
+  { day: 14, lat: 53.4084,  lon: -2.9916,  title: "Liverpool",      sub: "Thu 23 Jul · Arrive evening" },
+  { day: 15, lat: 52.2870,  lon: -1.5337,  title: "→ Warwick",      sub: "Fri 24 Jul · Warwick stop" },
+  { day: 16, lat: 52.2053,  lon: 0.1218,   title: "Cambridge",      sub: "Sat 25 Jul · Return south" },
+  { day: 17, lat: 51.5074,  lon: -0.1278,  title: "London",         sub: "Sun 26 Jul · Fly home" },
+];
+
+// ── Init map ────────────────────────────────────────────────────────────────
+const map = L.map('map', { zoomControl: true, scrollWheelZoom: true });
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+  maxZoom: 18,
+}).addTo(map);
+
+// ── Marker colours ──────────────────────────────────────────────────────────
+function markerColor(stop) {
+  if (stop.day === 1)  return { bg: '#27ae60', label: '▶' };
+  if (stop.day === 17) return { bg: '#c0392b', label: '✈' };
+  // Scenic / buffer days
+  if ([5,7,10,11,13].includes(stop.day)) return { bg: '#1976d2', label: stop.day };
+  // Drive days
+  if ([3,6,8,9,12,14,15,16].includes(stop.day)) return { bg: '#e67e22', label: stop.day };
+  // Base days
+  return { bg: '#2c5f8a', label: stop.day };
+}
+
+function makeIcon(stop) {
+  const mc = markerColor(stop);
+  return L.divIcon({
+    className: '',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -16],
+    html: `<div style="
+      background:${mc.bg};
+      color:#fff;
+      width:30px;height:30px;
+      border-radius:50%;
+      border:2px solid #fff;
+      display:flex;align-items:center;justify-content:center;
+      font-size:12px;font-weight:700;
+      box-shadow:0 2px 6px rgba(0,0,0,0.35);
+    ">${mc.label}</div>`
+  });
+}
+
+// ── Draw route + markers ────────────────────────────────────────────────────
+function drawRoute(activeDay) {
+  // Clear existing
+  map.eachLayer(l => { if (l instanceof L.Polyline || l instanceof L.Marker) map.removeLayer(l); });
+
+  const lats = stops.map(s => [s.lat, s.lon]);
+
+  // Route line
+  L.polyline(lats, {
+    color: '#2c5f8a',
+    weight: 3,
+    opacity: 0.7,
+    dashArray: '6, 8',
+  }).addTo(map);
+
+  // Markers
+  stops.forEach(stop => {
+    const mc = markerColor(stop);
+    const marker = L.marker([stop.lat, stop.lon], { icon: makeIcon(stop) })
+      .addTo(map)
+      .bindPopup(`<div class="popup-title">Day ${stop.day} · ${stop.title}</div><div class="popup-sub">${stop.sub}</div>`);
+
+    if (activeDay && stop.day === activeDay) {
+      marker.openPopup();
+    }
+  });
+
+  // Fit bounds
+  if (!activeDay) {
+    map.fitBounds(L.polyline(lats).getBounds(), { padding: [30, 30] });
+  } else {
+    const s = stops.find(x => x.day === activeDay);
+    map.setView([s.lat, s.lon], 9);
+  }
+}
+
+drawRoute(null);
+
+// ── Row click ────────────────────────────────────────────────────────────────
+document.querySelectorAll('#itinTable tbody tr').forEach(row => {
+  row.addEventListener('click', () => {
+    document.querySelectorAll('#itinTable tbody tr').forEach(r => r.classList.remove('active'));
+    row.classList.add('active');
+
+    const day  = parseInt(row.dataset.day);
+    const lat  = parseFloat(row.dataset.lat);
+    const lon  = parseFloat(row.dataset.lon);
+    const title = row.dataset.title;
+    const sub   = row.dataset.sub;
+
+    map.setView([lat, lon], 10);
+    drawRoute(day);
+
+    // Update detail card (mobile)
+    document.getElementById('detailTitle').textContent = `Day ${day} · ${title}`;
+    document.getElementById('detailSub').textContent = sub;
+    document.getElementById('dayDetail').classList.add('visible');
+  });
+});
+
+// ── Cycling toggle ────────────────────────────────────────────────────────────
+document.getElementById('cyclingToggle').addEventListener('change', function() {
+  const notes = document.querySelectorAll('#itinTable tbody tr[data-day="5"] td.details');
+  if (this.checked) {
+    notes[0].innerHTML = 'Guided cycling tour AM · <strong>Bath sightseeing PM</strong><br><span style="color:#1976d2;font-size:0.75rem">🚴 Bath City &amp; Countryside Tour · 10am · ~3–3.5 hrs · ~18km · e-bike upgrade available · ~£39–£40 pp + £25 e-bike</span>';
+  } else {
+    notes[0].textContent = 'Flexible Bath day · food / cafes / extra sightseeing';
+  }
+});
+</script>
+</body>
+</html>
