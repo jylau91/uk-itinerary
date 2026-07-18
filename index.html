@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UK Road Trip Itinerary — Jul 2026</title>
+<title>🇬🇧 UK Road Trip — Jul 2026</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -18,49 +18,37 @@
     --danger: #c0392b;
     --green: #27ae60;
     --amber: #e67e22;
-    --text-sm: 0.8rem;
-    --text-base: 0.95rem;
+    --purple: #7b1fa2;
+    --text-sm: 0.78rem;
+    --text-base: 0.92rem;
     --text-lg: 1.1rem;
     --radius: 8px;
     --shadow: 0 2px 8px rgba(0,0,0,0.08);
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: var(--bg);
     color: var(--ink);
     line-height: 1.5;
-    padding: 24px 16px;
+    padding: 20px 14px;
+    font-size: var(--text-base);
   }
 
-  .container {
-    max-width: 1100px;
+  /* ── Layout ── */
+  .layout {
+    max-width: 1300px;
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 380px;
-    gap: 24px;
-    align-items: start;
   }
-
-  @media (max-width: 860px) {
-    .container { grid-template-columns: 1fr; }
-  }
-
-  /* ── Header ── */
   header {
-    grid-column: 1 / -1;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
   }
-  header h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--ink);
-  }
+  header h1 { font-size: 1.5rem; font-weight: 700; }
   header .badge {
     background: var(--accent);
     color: #fff;
@@ -70,138 +58,211 @@
     border-radius: 20px;
   }
 
-  /* ── Itinerary table ── */
-  .itinerary-panel {
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    padding: 7px 16px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  /* ── Panels ── */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Card ── */
+  .card {
     background: var(--surface);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     overflow: hidden;
+    margin-bottom: 16px;
   }
-
-  .itinerary-panel h2 {
+  .card h2 {
     font-size: var(--text-lg);
     font-weight: 700;
-    padding: 16px 20px 12px;
+    padding: 14px 18px 10px;
     border-bottom: 1px solid var(--border);
     color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: var(--text-base);
+  /* ── Summary stats ── */
+  .summary-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
   }
+  .summary-stat {
+    flex: 1;
+    min-width: 100px;
+    padding: 10px 16px;
+    border-right: 1px solid var(--border);
+    text-align: center;
+  }
+  .summary-stat:last-child { border-right: none; }
+  .summary-stat .val { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+  .summary-stat .lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
 
+  /* ── Itinerary table ── */
+  table { width: 100%; border-collapse: collapse; font-size: var(--text-base); }
   thead th {
     background: var(--accent-light);
     color: var(--accent);
     font-weight: 600;
     font-size: var(--text-sm);
     text-align: left;
-    padding: 8px 12px;
+    padding: 7px 10px;
     border-bottom: 2px solid var(--border);
     white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 2;
   }
-
   tbody tr {
     border-bottom: 1px solid var(--border);
-    transition: background 0.15s;
+    transition: background 0.12s;
     cursor: pointer;
   }
   tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: var(--accent-light); }
+  tbody tr:hover { background: #f0f6fc; }
   tbody tr.active { background: var(--accent-light); }
   tbody tr.active td:first-child { border-left: 3px solid var(--accent); }
+  td { padding: 8px 10px; vertical-align: top; }
+  td.date { font-weight: 700; white-space: nowrap; color: var(--accent); min-width: 80px; font-size: 0.85rem; }
+  td.route { font-weight: 600; max-width: 160px; }
+  td.tag { white-space: nowrap; text-align: center; }
+  td.details, td.accom { color: var(--muted); font-size: var(--text-sm); }
+  td.accom { font-style: italic; max-width: 200px; }
 
-  td { padding: 10px 12px; vertical-align: top; }
-  td.date { font-weight: 700; white-space: nowrap; color: var(--accent); min-width: 90px; }
-  td.route { font-weight: 600; max-width: 180px; }
-  td.details { color: var(--muted); font-size: var(--text-sm); }
-  td.tag {
-    white-space: nowrap;
-    text-align: center;
-  }
-  .tag-pill {
+  /* ── Pill tags ── */
+  .pill {
     display: inline-block;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 600;
-    padding: 2px 8px;
+    padding: 2px 7px;
     border-radius: 10px;
+    white-space: nowrap;
   }
-  .pill-drive { background: #fef3e2; color: var(--amber); }
-  .pill-base  { background: #e8f5e9; color: var(--green); }
-  .pill-scenic { background: #e3f2fd; color: #1976d2; }
-  .pill-buffer { background: #f3e5f5; color: #7b1fa2; }
-  .pill-fly    { background: #fce4ec; color: var(--danger); }
+  .pill-base  { background: #e8f5e9; color: #2e7d32; }
+  .pill-drive { background: #fef3e2; color: #b55400; }
+  .pill-scenic{ background: #e3f2fd; color: #1565c0; }
+  .pill-buffer{ background: #f3e5f5; color: #6a1b9a; }
+  .pill-fly   { background: #fce4ec; color: var(--danger); }
+  .pill-meal  { background: #fff3e0; color: #e65100; }
+  .pill-yes   { background: #e8f5e9; color: #2e7d32; }
+  .pill-no    { background: #fafafa; color: #9e9e9e; }
+  .pill-maybe { background: #fff9c4; color: #f57f17; }
+
+  /* ── Detail drawer ── */
+  .detail-drawer {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: 0 3px 14px rgba(0,0,0,0.12);
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    border-left: 4px solid var(--accent);
+    display: none;
+  }
+  .detail-drawer.visible { display: block; }
+  .detail-drawer h3 { font-size: var(--text-lg); margin-bottom: 4px; }
+  .detail-drawer .sub { color: var(--muted); font-size: var(--text-sm); margin-bottom: 12px; }
+  .detail-drawer .section { margin-bottom: 10px; }
+  .detail-drawer .section-title { font-weight: 700; font-size: var(--text-sm); text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); margin-bottom: 4px; }
+  .detail-drawer ul { list-style: none; padding: 0; }
+  .detail-drawer li { font-size: var(--text-sm); padding: 2px 0; border-bottom: 1px solid #f0f0f0; }
+  .detail-drawer li:last-child { border-bottom: none; }
+  .detail-drawer .accom-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #e8f5e9;
+    border: 1px solid #c8e6c9;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .detail-drawer .accom-badge .bfast {
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-weight: 700;
+  }
 
   /* ── Map ── */
   #map {
-    height: 600px;
+    height: 560px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  #map-full {
+    height: 620px;
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     border: 1px solid var(--border);
   }
 
-  /* ── Day detail card (right column on mobile) ── */
-  .day-detail {
-    background: var(--surface);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 20px;
-    margin-top: 16px;
-    display: none;
-  }
-  .day-detail.visible { display: block; }
-  .day-detail h3 { font-size: var(--text-lg); margin-bottom: 8px; }
-  .day-detail .notes { font-size: var(--text-sm); color: var(--muted); margin-top: 8px; }
-  .day-detail .notes strong { color: var(--ink); }
-
-  /* ── Cycling toggle ── */
-  .cycling-toggle {
-    grid-column: 1 / -1;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    background: var(--accent-light);
-    border-radius: var(--radius);
-    border: 1px dashed var(--accent);
-    font-size: var(--text-sm);
-    color: var(--accent);
-  }
-  .cycling-toggle input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
-  .cycling-toggle label { cursor: pointer; user-select: none; }
-
   /* ── Legend ── */
   .legend {
-    grid-column: 1 / -1;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 16px;
+    gap: 6px 16px;
     font-size: var(--text-sm);
     color: var(--muted);
-    padding: 4px 0;
+    padding: 6px 0;
   }
   .legend-item { display: flex; align-items: center; gap: 5px; }
-  .legend-dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
-  /* ── Leaflet custom markers ── */
+  /* ── Detail row chips ── */
+  .chip { display: inline-block; background: var(--accent-light); color: var(--accent); font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 10px; margin: 1px 2px; }
+
+  /* ── Accommodation mini-table ── */
+  .accom-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+  .accom-table th { background: var(--accent-light); color: var(--accent); font-weight: 600; text-align: left; padding: 6px 10px; font-size: 0.72rem; text-transform: uppercase; }
+  .accom-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .accom-table tr:last-child td { border-bottom: none; }
+  .accom-table .n { font-weight: 600; }
+  .accom-table .a { color: var(--muted); font-size: 0.78rem; }
+  .accom-table .y { color: #2e7d32; font-weight: 700; }
+  .accom-table .n2 { color: #9e9e9e; }
+  .accom-table .m { color: #f57f17; font-weight: 700; }
+  .accom-table .km { font-size: 0.72rem; color: var(--muted); }
+
+  /* ── Day notes accordion ── */
+  .day-notes { font-size: 0.78rem; color: var(--muted); padding: 2px 0; }
+  .day-notes strong { color: var(--ink); }
+
+  /* ── Popup ── */
+  .popup-title { font-weight: 700; font-size: 13px; margin-bottom: 3px; }
+  .popup-sub   { font-size: 11px; color: #666; }
+
+  /* ── Leaflet numbered markers ── */
   .numbered-icon {
     background: var(--accent);
-    color: #fff;
-    border-radius: 50%;
-    border: 2px solid #fff;
-    width: 28px; height: 28px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  }
-  .start-marker, .end-marker {
-    background: #27ae60;
     color: #fff;
     border-radius: 50%;
     border: 2px solid #fff;
@@ -210,298 +271,726 @@
     font-size: 11px; font-weight: 700;
     box-shadow: 0 2px 4px rgba(0,0,0,0.3);
   }
-  .end-marker { background: var(--danger); }
 
-  .leaflet-popup-content-wrapper { border-radius: 8px; }
-  .popup-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
-  .popup-sub { font-size: 12px; color: #666; }
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .summary-stat { min-width: 70px; padding: 8px 8px; }
+    .summary-stat .val { font-size: 1rem; }
+    td, th { padding: 6px 7px; }
+    #map, #map-full { height: 380px; }
+  }
 </style>
 </head>
 <body>
 
-<div class="container">
+<div class="layout">
 
+  <!-- ═══ HEADER ═══ -->
   <header>
     <h1>🇬🇧 UK Road Trip — Jul 2026</h1>
-    <span class="badge">17 days · 10–26 Jul</span>
+    <span class="badge">10–25 Jul · 16 days · ~1,850 km</span>
   </header>
 
-  <!-- Cycling toggle -->
-  <div class="cycling-toggle">
-    <input type="checkbox" id="cyclingToggle">
-    <label for="cyclingToggle">🚴 Add cycling tour — Bath, 14 Jul morning (City &amp; Countryside guided tour, 10am)</label>
+  <!-- ═══ TABS ═══ -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('overview')">🗺 Overview</button>
+    <button class="tab-btn" onclick="showTab('itin')">📅 Itinerary</button>
+    <button class="tab-btn" onclick="showTab('accom')">🏨 Accommodation</button>
+    <button class="tab-btn" onclick="showTab('map')">🗺️ Full Map</button>
   </div>
 
-  <!-- Itinerary table -->
-  <div class="itinerary-panel">
-    <h2>Itinerary</h2>
-    <table id="itinTable">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Location / Route</th>
-          <th>Plan</th>
-          <th>Type</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr data-day="1" data-lat="51.5074" data-lon="-0.1278" data-title="London" data-sub="Fri 10 Jul">
-          <td class="date">Fri 10 Jul</td>
-          <td class="route">🇬🇧 London</td>
-          <td class="details">Arrive / settle in</td>
-          <td class="tag"><span class="tag-pill pill-base">Base</span></td>
-        </tr>
-        <tr data-day="2" data-lat="51.5074" data-lon="-0.1278" data-title="London — Day 2" data-sub="Sat 11 Jul">
-          <td class="date">Sat 11 Jul</td>
-          <td class="route">🇬🇧 London</td>
-          <td class="details">Landmarks + NHM 3pm</td>
-          <td class="tag"><span class="tag-pill pill-base">Base</span></td>
-        </tr>
-        <tr data-day="3" data-lat="51.5074" data-lon="-0.1278" data-title="London → Bath" data-sub="Sun 12 Jul · Drive day">
-          <td class="date">Sun 12 Jul</td>
-          <td class="route">London → Bath</td>
-          <td class="details">Travel towards Bath / flexi stop</td>
-          <td class="tag"><span class="tag-pill pill-drive">Drive</span></td>
-        </tr>
-        <tr data-day="4" data-lat="51.3811" data-lon="-2.3590" data-title="Bath — Sightseeing" data-sub="Mon 13 Jul">
-          <td class="date">Mon 13 Jul</td>
-          <td class="route">🇬🇧 Bath</td>
-          <td class="details">Royal Crescent, Roman Baths, Pulteney Bridge, Bath Abbey</td>
-          <td class="tag"><span class="tag-pill pill-base">Base</span></td>
-        </tr>
-        <tr data-day="5" data-lat="51.3811" data-lon="-2.3590" data-title="Bath — Flexible Day" data-sub="Tue 14 Jul · Flexible Bath day">
-          <td class="date">Tue 14 Jul</td>
-          <td class="route">🇬🇧 Bath</td>
-          <td class="details">Flexible Bath day · food / cafes / extra sightseeing</td>
-          <td class="tag"><span class="tag-pill pill-scenic">Scenic</span></td>
-        </tr>
-        <tr data-day="6" data-lat="50.2636" data-lon="-5.0527" data-title="Bath → Cornwall" data-sub="Wed 15 Jul · Via Exeter">
-          <td class="date">Wed 15 Jul</td>
-          <td class="route">Bath → Exeter → Cornwall</td>
-          <td class="details">Drive day with Exeter stop</td>
-          <td class="tag"><span class="tag-pill pill-drive">Drive</span></td>
-        </tr>
-        <tr data-day="7" data-lat="50.2636" data-lon="-5.0527" data-title="Cornwall" data-sub="Thu 16 Jul">
-          <td class="date">Thu 16 Jul</td>
-          <td class="route">🇬🇧 Cornwall</td>
-          <td class="details">Cornwall exploring day</td>
-          <td class="tag"><span class="tag-pill pill-scenic">Scenic</span></td>
-        </tr>
-        <tr data-day="8" data-lat="50.6580" data-lon="-4.7537" data-title="Cornwall → Tintagel → Exmoor" data-sub="Fri 17 Jul">
-          <td class="date">Fri 17 Jul</td>
-          <td class="route">Cornwall → Tintagel → Exmoor</td>
-          <td class="details">Tintagel · coastal drive · Exmoor arrival</td>
-          <td class="tag"><span class="tag-pill pill-drive">Drive</span></td>
-        </tr>
-        <tr data-day="9" data-lat="51.0167" data-lon="-3.2333" data-title="Exmoor → Glasbury / Brecon" data-sub="Sat 18 Jul">
-          <td class="date">Sat 18 Jul</td>
-          <td class="route">Exmoor → Glasbury / Brecon</td>
-          <td class="details">Travel into Wales / countryside</td>
-          <td class="tag"><span class="tag-pill pill-drive">Drive</span></td>
-        </tr>
-        <tr data-day="10" data-lat="51.9460" data-lon="-4.3014" data-title="Wales / Pembrokeshire" data-sub="Sun 19 Jul">
-          <td class="date">Sun 19 Jul</td>
-          <td class="route">🏴 Wales / Pembrokeshire</td>
-          <td class="details">Buffer / nature day</td>
-          <td class="tag"><span class="tag-pill pill-buffer">Buffer</span></td>
-        </tr>
-        <tr data-day="11" data-lat="51.6739" data-lon="-4.9043" data-title="Pembrokeshire" data-sub="Mon 20 Jul · ⚠️ Castlemartin firing closures 7:30am–4:45pm">
-          <td class="date">Mon 20 Jul</td>
-          <td class="route">🏴 Pembrokeshire</td>
-          <td class="details">Coastal day — ⚠️ St Govan's &amp; Green Bridge closed 7:30am–4:45pm</td>
-          <td class="tag"><span class="tag-pill pill-scenic">Scenic</span></td>
-        </tr>
-        <tr data-day="12" data-lat="52.4147" data-lon="-4.0816" data-title="Pembrokeshire → Aberystwyth → Snowdonia/Anglesey" data-sub="Tue 21 Jul · Big drive day">
-          <td class="date">Tue 21 Jul</td>
-          <td class="route">Pembrokeshire → Aberystwyth → Snowdonia</td>
-          <td class="details">Drive up west Wales coast · Aberystwyth stop</td>
-          <td class="tag"><span class="tag-pill pill-drive">Drive</span></td>
-        </tr>
-        <tr data-day="13" data-lat="53.0686" data-lon="-4.0760" data-title="Snowdonia / Anglesey" data-sub="Wed 22 Jul">
-          <td class="date">Wed 22 Jul</td>
-          <td class="route">🏴 Snowdonia / Anglesey</td>
-          <td class="details">North Wales scenery / activities</td>
-          <td class="tag"><span class="tag-pill pill-scenic">Scenic</span></td>
-        </tr>
-        <tr data-day="14" data-lat="53.4084" data-lon="-2.9916" data-title="North Wales → Liverpool" data-sub="Thu 23 Jul">
-          <td class="date">Thu 23 Jul</td>
-          <td class="route">North Wales → Liverpool</td>
-          <td class="details">Travel to Liverpool / evening there</td>
-          <td class="tag"><span class="tag-pill pill-drive">Drive</span></td>
-        </tr>
-        <tr data-day="15" data-lat="51.4104" data-lon="-2.5889" data-title="Liverpool → Warwick → Cambridge" data-sub="Fri 24 Jul">
-          <td class="date">Fri 24 Jul</td>
-          <td class="route">Liverpool → Warwick → Cambridge</td>
-          <td class="details">Warwick stop · then Cambridge</td>
-          <td class="tag"><span class="tag-pill pill-drive">Drive</span></td>
-        </tr>
-        <tr data-day="16" data-lat="52.2053" data-lon="0.1218" data-title="Cambridge → London" data-sub="Sat 25 Jul · Optional Cambridge bike tour AM">
-          <td class="date">Sat 25 Jul</td>
-          <td class="route">Cambridge → London</td>
-          <td class="details">Cambridge AM · return to London</td>
-          <td class="tag"><span class="tag-pill pill-drive">Drive</span></td>
-        </tr>
-        <tr data-day="17" data-lat="51.5074" data-lon="-0.1278" data-title="London — Fly Home" data-sub="Sun 26 Jul · Fly home">
-          <td class="date">Sun 26 Jul</td>
-          <td class="route">🇬🇧 London → 🏠</td>
-          <td class="details">Fly home</td>
-          <td class="tag"><span class="tag-pill pill-fly">Fly</span></td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- ══════════════════════════════════════════════════════
+       TAB 1: OVERVIEW
+  ═══════════════════════════════════════════════════════ -->
+  <div id="panel-overview" class="tab-panel active">
+
+    <!-- Summary stats -->
+    <div class="card">
+      <h2>📊 Trip Summary</h2>
+      <div class="summary-bar">
+        <div class="summary-stat"><div class="val">16</div><div class="lbl">Days</div></div>
+        <div class="summary-stat"><div class="val">1,850</div><div class="lbl">km driven</div></div>
+        <div class="summary-stat"><div class="val">~25.5h</div><div class="lbl">drive time</div></div>
+        <div class="summary-stat"><div class="val">11</div><div class="lbl">stops</div></div>
+        <div class="summary-stat"><div class="val">7</div><div class="lbl">countries/regions</div></div>
+      </div>
+    </div>
+
+    <!-- Compact timeline -->
+    <div class="card">
+      <h2>🛤 Route Timeline</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>From → To</th>
+            <th>Region</th>
+            <th>Distance</th>
+            <th>Drive</th>
+            <th>Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr onclick="showDayDetail(1)">
+            <td>Fri 10 Jul</td><td>🇬🇧 KL → London</td><td>London</td><td>—</td><td>—</td><td><span class="pill pill-fly">Fly</span></td>
+          </tr>
+          <tr onclick="showDayDetail(2)">
+            <td>Sat 11 Jul</td><td>London → London</td><td>London</td><td>—</td><td>—</td><td><span class="pill pill-base">Base</span></td>
+          </tr>
+          <tr onclick="showDayDetail(3)">
+            <td>Sun 12 Jul</td><td>London → Bath</td><td>Bath</td><td>179 km</td><td>~2.5h</td><td><span class="pill pill-drive">Drive</span></td>
+          </tr>
+          <tr onclick="showDayDetail(4)">
+            <td>Mon 13 Jul</td><td>Bath → Bath</td><td>Bath</td><td>—</td><td>—</td><td><span class="pill pill-base">Base</span></td>
+          </tr>
+          <tr onclick="showDayDetail(5)">
+            <td>Tue 14 Jul</td><td>Bath → Bath</td><td>Bath</td><td>—</td><td>—</td><td><span class="pill pill-scenic">Scenic</span></td>
+          </tr>
+          <tr onclick="showDayDetail(6)">
+            <td>Wed 15 Jul</td><td>Bath → St Columb Major</td><td>Cornwall</td><td>256 km</td><td>~3.4h</td><td><span class="pill pill-drive">Drive</span></td>
+          </tr>
+          <tr onclick="showDayDetail(7)">
+            <td>Thu 16 Jul</td><td>Cornwall → Cornwall</td><td>Cornwall</td><td>—</td><td>—</td><td><span class="pill pill-scenic">Scenic</span></td>
+          </tr>
+          <tr onclick="showDayDetail(8)">
+            <td>Fri 17 Jul</td><td>St Columb → Wootton Courtenay</td><td>Exmoor</td><td>206 km</td><td>~2.6h</td><td><span class="pill pill-drive">Drive</span></td>
+          </tr>
+          <tr onclick="showDayDetail(9)">
+            <td>Sat 18 Jul</td><td>Wootton → Glasbury</td><td>Wales</td><td>196 km</td><td>~2.9h</td><td><span class="pill pill-drive">Drive</span></td>
+          </tr>
+          <tr onclick="showDayDetail(10)">
+            <td>Sun 19 Jul</td><td>Glasbury → Pembroke Dock</td><td>Pembrokeshire</td><td>149 km</td><td>~2.1h</td><td><span class="pill pill-buffer">Buffer</span></td>
+          </tr>
+          <tr onclick="showDayDetail(11)">
+            <td>Mon 20 Jul</td><td>Pembroke Dock → Pembroke Dock</td><td>Pembrokeshire</td><td>—</td><td>—</td><td><span class="pill pill-scenic">Scenic</span></td>
+          </tr>
+          <tr onclick="showDayDetail(12)">
+            <td>Tue 21 Jul</td><td>Pembroke Dock → Bull Bay</td><td>Anglesey</td><td>287 km</td><td>~4.6h</td><td><span class="pill pill-drive">Drive</span></td>
+          </tr>
+          <tr onclick="showDayDetail(13)">
+            <td>Wed 22 Jul</td><td>Bull Bay → Bull Bay</td><td>Anglesey</td><td>—</td><td>—</td><td><span class="pill pill-scenic">Scenic</span></td>
+          </tr>
+          <tr onclick="showDayDetail(14)">
+            <td>Thu 23 Jul</td><td>Bull Bay → Liverpool</td><td>Liverpool</td><td>172 km</td><td>~2.3h</td><td><span class="pill pill-drive">Drive</span></td>
+          </tr>
+          <tr onclick="showDayDetail(15)">
+            <td>Fri 24 Jul</td><td>Liverpool → Cambridge</td><td>Cambridge</td><td>308 km</td><td>~3.6h</td><td><span class="pill pill-drive">Drive</span></td>
+          </tr>
+          <tr onclick="showDayDetail(16)">
+            <td>Sat 25 Jul</td><td>Cambridge → London</td><td>London</td><td>95 km</td><td>~1.5h</td><td><span class="pill pill-drive">Drive</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Map -->
+    <div id="map"></div>
+
+    <!-- Legend -->
+    <div class="legend" style="margin-top:10px">
+      <div class="legend-item"><div class="legend-dot" style="background:#27ae60"></div> Start</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#2c5f8a"></div> Overnight stop</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#1976d2"></div> Scenic / buffer</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e67e22"></div> Drive day</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#7b1fa2"></div> Wales / national parks</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#c0392b"></div> End</div>
+    </div>
+
+    <!-- Day detail drawer -->
+    <div class="detail-drawer" id="dayDetail"></div>
+
   </div>
 
-  <!-- Map -->
-  <div id="map"></div>
-
-  <!-- Legend -->
-  <div class="legend">
-    <div class="legend-item"><div class="legend-dot" style="background:#27ae60"></div> Start</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Overnight stop</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#1976d2"></div> Scenic / buffer</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div> Drive day</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div> End / Fly home</div>
+  <!-- ══════════════════════════════════════════════════════
+       TAB 2: ITINERARY (activities / food / restaurants / cafes)
+  ═══════════════════════════════════════════════════════ -->
+  <div id="panel-itin" class="tab-panel">
+    <div class="card">
+      <h2>📅 Detailed Itinerary</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Area</th>
+            <th>Activities / Attractions</th>
+            <th>Food</th>
+            <th>Restaurants</th>
+            <th>Cafes</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr onclick="showItinDetail(1)">
+            <td>Fri 10 Jul</td>
+            <td>🇬🇧 London</td>
+            <td class="details">Arrive / settle in</td>
+            <td class="details">—</td>
+            <td class="details">—</td>
+            <td class="details">—</td>
+            <td class="details"></td>
+          </tr>
+          <tr onclick="showItinDetail(2)">
+            <td>Sat 11 Jul</td>
+            <td>🇬🇧 London</td>
+            <td class="details">Tower Bridge, Big Ben &amp; Houses of Parliament, Buckingham Palace, Vivobarefoot store, NHM 3pm entry</td>
+            <td class="details">—</td>
+            <td class="details">Bancone (Soho?)</td>
+            <td class="details">Arôme, Chestnut Bakery, Monmouth Coffee Company</td>
+            <td class="details"></td>
+          </tr>
+          <tr onclick="showItinDetail(3)">
+            <td>Sun 12 Jul</td>
+            <td>Bath</td>
+            <td class="details">En route to Bath</td>
+            <td class="details">—</td>
+            <td class="details">Solina, Opa (2026 Greek menu), Clayton's Kitchen (British fine dining), Walled Garden (Chippenham)?</td>
+            <td class="details">Colonna &amp; Smalls, Landrace Bakery, cortado, sugarcane studio</td>
+            <td class="details"></td>
+          </tr>
+          <tr onclick="showItinDetail(4)">
+            <td>Mon 13 Jul</td>
+            <td>Bath</td>
+            <td class="details">Royal Crescent, Roman Baths, Pulteney Bridge, Bath Abbey</td>
+            <td class="details">—</td>
+            <td class="details">Dinner: Scallop Shell (7.15pm)</td>
+            <td class="details"></td>
+            <td class="details"></td>
+          </tr>
+          <tr onclick="showItinDetail(5)">
+            <td>Tue 14 Jul</td>
+            <td>Bath</td>
+            <td class="details">Take pics at crescent</td>
+            <td class="details">—</td>
+            <td class="details">Beefy boys</td>
+            <td class="details"></td>
+            <td class="details">Mom's vegetarian day</td>
+          </tr>
+          <tr onclick="showItinDetail(6)">
+            <td>Wed 15 Jul</td>
+            <td>Cornwall</td>
+            <td class="details">En route: Cheddar Gorge, Exeter cathedral</td>
+            <td class="details">Cornish pasties, Cornish cream tea (scone + jam + clotted cream)</td>
+            <td class="details"></td>
+            <td class="details"></td>
+            <td class="details"></td>
+          </tr>
+          <tr onclick="showItinDetail(7)">
+            <td>Thu 16 Jul</td>
+            <td>Cornwall</td>
+            <td class="details">St Michael's Mount ⚠️ tide window 11.05–15.40, Mousehole, St Ives &amp; Godrevy (coastal cliffs)</td>
+            <td class="details">—</td>
+            <td class="details"></td>
+            <td class="details"></td>
+            <td class="details">⚠️ St Michael's Mount: check tide before visiting</td>
+          </tr>
+          <tr onclick="showItinDetail(8)">
+            <td>Fri 17 Jul</td>
+            <td>Exmoor</td>
+            <td class="details">Tintagel Castle, Hartland Devon Heritage Coast, Valley of Rocks, stargazing (weather permitting)</td>
+            <td class="details">—</td>
+            <td class="details"></td>
+            <td class="details"></td>
+            <td class="details">🌟 Stargazing if weather clear</td>
+          </tr>
+          <tr onclick="showItinDetail(9)">
+            <td>Sat 18 Jul</td>
+            <td>Wales</td>
+            <td class="details">Puzzle Wood (Forest of Dean), Bannau Brycheiniog / Brecon Beacons NP, Pen-y-fan hike (see routes below)</td>
+            <td class="details">—</td>
+            <td class="details"></td>
+            <td class="details"></td>
+            <td class="details"><strong>Pen-y-fan routes:</strong><br>1) Pont ar Daf CP ~6.4km / 2.5–3.5h (busy Sat)<br>2) Cwm Gwdi CP ~7.4km / 3–3.5h (quieter, ~33 spaces)<br>3) Nant Cwm Llwch CP ~8.5km / 3.5–4h (glacial lake)</td>
+          </tr>
+          <tr onclick="showItinDetail(10)">
+            <td>Sun 19 Jul</td>
+            <td>Pembrokeshire</td>
+            <td class="details">Wright's Food Emporium (on way), Tenby, Pembroke Castle</td>
+            <td class="details">Welsh rarebit, Welsh cakes</td>
+            <td class="details">Wright's Food Emporium</td>
+            <td class="details"></td>
+            <td class="details">Pembroke Castle: Henry Tudor birthplace; giant map of Wales</td>
+          </tr>
+          <tr onclick="showItinDetail(11)">
+            <td>Mon 20 Jul</td>
+            <td>Pembrokeshire</td>
+            <td class="details">Stackpole Estate: Bosherston Lily Ponds, Broad Haven South, Stackpole Quay, Barafundle Bay (full trail)</td>
+            <td class="details">—</td>
+            <td class="details"></td>
+            <td class="details"></td>
+            <td class="details">🌟 Best nature day: lily ponds → Broad Haven → Barafundle Bay</td>
+          </tr>
+          <tr onclick="showItinDetail(12)">
+            <td>Tue 21 Jul</td>
+            <td>Anglesey</td>
+            <td class="details">Llyn Idwal / Cwm Idwal (Ogwen Valley), Puffin Island?</td>
+            <td class="details">Anglesey Eggs / Ŵyau Ynys Môn</td>
+            <td class="details"></td>
+            <td class="details"></td>
+            <td class="details">⚠️ Long drive (~287 km / ~4.6h). Puffins may be gone by late Jul — check boat operator. Llyn Idwal = best effort vs scenery.</td>
+          </tr>
+          <tr onclick="showItinDetail(13)">
+            <td>Wed 22 Jul</td>
+            <td>Anglesey</td>
+            <td class="details">South Stack Lighthouse &amp; RSPB Nature Reserve (choughs, puffins, seabirds)</td>
+            <td class="details">—</td>
+            <td class="details"></td>
+            <td class="details"></td>
+            <td class="details">Late afternoon / sunset recommended</td>
+          </tr>
+          <tr onclick="showItinDetail(14)">
+            <td>Thu 23 Jul</td>
+            <td>Liverpool</td>
+            <td class="details">Royal Albert Dock, Three Graces / Liver Building, Cavern Quarter, Liverpool Cathedral, Metropolitan Cathedral</td>
+            <td class="details">—</td>
+            <td class="details"></td>
+            <td class="details"></td>
+            <td class="details">Strong local identity — port city, Beatles, working-class culture</td>
+          </tr>
+          <tr onclick="showItinDetail(15)">
+            <td>Fri 24 Jul</td>
+            <td>Cambridge</td>
+            <td class="details">Punting, Great St Mary's Church tower climb</td>
+            <td class="details">—</td>
+            <td class="details"></td>
+            <td class="details"></td>
+            <td class="details">Guided punt tour recommended (~50 min). Tower views at sunset.</td>
+          </tr>
+          <tr onclick="showItinDetail(16)">
+            <td>Sat 25 Jul</td>
+            <td>🇬🇧 London</td>
+            <td class="details">Return / flex day</td>
+            <td class="details">—</td>
+            <td class="details">—</td>
+            <td class="details">—</td>
+            <td class="details">~95 km / ~1.5h from Cambridge</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
-  <!-- Day detail card (mobile) -->
-  <div class="day-detail" id="dayDetail">
-    <h3 id="detailTitle">—</h3>
-    <p id="detailSub" style="color:var(--muted);font-size:var(--text-sm)"></p>
-    <p class="notes" id="detailNotes"></p>
+  <!-- ══════════════════════════════════════════════════════
+       TAB 3: ACCOMMODATION
+  ═══════════════════════════════════════════════════════ -->
+  <div id="panel-accom" class="tab-panel">
+    <div class="card">
+      <h2>🏨 Accommodation</h2>
+      <table class="accom-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Address</th>
+            <th>Breakfast?</th>
+            <th>Drive to next</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Fri 10 Jul</td>
+            <td class="n">—</td>
+            <td class="a">KL → London</td>
+            <td class="n2">—</td>
+            <td class="km">—</td>
+          </tr>
+          <tr>
+            <td>Sat 11 Jul</td>
+            <td class="n">The Marloes, Earls Court</td>
+            <td class="a">The Marloes, London</td>
+            <td class="n2">❌ No</td>
+            <td class="km">—</td>
+          </tr>
+          <tr>
+            <td>Sun 12 Jul</td>
+            <td class="n">—</td>
+            <td class="a">Travel day → Bath</td>
+            <td class="n2">—</td>
+            <td class="km">—</td>
+          </tr>
+          <tr>
+            <td>Mon 13 Jul</td>
+            <td class="n">Stunning 5BR New Build</td>
+            <td class="a">30 Colliers Lane, Bath BA1 8DP</td>
+            <td class="n2">❌ No</td>
+            <td class="km">—</td>
+          </tr>
+          <tr>
+            <td>Tue 14 Jul</td>
+            <td class="n">—</td>
+            <td class="a">Same as 13 Jul</td>
+            <td class="n2">—</td>
+            <td class="km">—</td>
+          </tr>
+          <tr>
+            <td>Wed 15 Jul</td>
+            <td class="n">Peaceful Relaxing Home + Leisure</td>
+            <td class="a">Retallack Resort, St. Columb Major, Cornwall TR9 6DE</td>
+            <td class="n2">❌ No</td>
+            <td class="km">—</td>
+          </tr>
+          <tr>
+            <td>Thu 16 Jul</td>
+            <td class="n">—</td>
+            <td class="a">Same as 15 Jul</td>
+            <td class="n2">—</td>
+            <td class="km">—</td>
+          </tr>
+          <tr>
+            <td>Fri 17 Jul</td>
+            <td class="n">Dunkery Beacon Country House</td>
+            <td class="a">Brockwell Lane, Brockwell, Minehead, Somerset TA24 8RH</td>
+            <td class="m">❓ Check</td>
+            <td class="km">196 km / ~2.9h → Wales</td>
+          </tr>
+          <tr>
+            <td>Sat 18 Jul</td>
+            <td class="n">Foyles of Glasbury</td>
+            <td class="a">B4350, Cwmbach, Glasbury, Powys HR3 5LH</td>
+            <td class="n2">—</td>
+            <td class="km">149 km / ~2.1h → Pembrokeshire</td>
+          </tr>
+          <tr>
+            <td>Sun 19 Jul</td>
+            <td class="n">4BR Coastal Getaway</td>
+            <td class="a">42 Clarence St, Pembroke Dock SA72 6JP</td>
+            <td class="y">✅ Yes</td>
+            <td class="km">—</td>
+          </tr>
+          <tr>
+            <td>Mon 20 Jul</td>
+            <td class="n">—</td>
+            <td class="a">Same as 19 Jul</td>
+            <td class="n2">—</td>
+            <td class="km">—</td>
+          </tr>
+          <tr>
+            <td>Tue 21 Jul</td>
+            <td class="n">Gwel Y Mor Duo by Birch Stays</td>
+            <td class="a">Hafan Glyd, Ffordd Porth Llechog, Bull Bay, Anglesey LL68 9SD</td>
+            <td class="n2">❌ No</td>
+            <td class="km">—</td>
+          </tr>
+          <tr>
+            <td>Wed 22 Jul</td>
+            <td class="n">—</td>
+            <td class="a">Same as 21 Jul</td>
+            <td class="n2">—</td>
+            <td class="km">172 km / ~2.3h → Liverpool</td>
+          </tr>
+          <tr>
+            <td>Thu 23 Jul</td>
+            <td class="n">Staybridge Suites</td>
+            <td class="a">21 Keel Wharf, Liverpool L3 4FN (IHG)</td>
+            <td class="y">✅ Yes</td>
+            <td class="km">308 km / ~3.6h → Cambridge</td>
+          </tr>
+          <tr>
+            <td>Fri 24 Jul</td>
+            <td class="n">Hyatt Centric Cambridge</td>
+            <td class="a">37 Eddington Ave, Cambridge CB3 1SE</td>
+            <td class="n2">❌ No</td>
+            <td class="km">95 km / ~1.5h → London</td>
+          </tr>
+          <tr>
+            <td>Sat 25 Jul</td>
+            <td class="n">—</td>
+            <td class="a">Return to London</td>
+            <td class="n2">—</td>
+            <td class="km">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
-</div>
+  <!-- ══════════════════════════════════════════════════════
+       TAB 4: FULL MAP
+  ═══════════════════════════════════════════════════════ -->
+  <div id="panel-map" class="tab-panel">
+    <div class="card">
+      <h2>🗺️ Full Trip Map</h2>
+      <p style="font-size:0.8rem;color:var(--muted);padding:0 18px 10px">Click any row in the Itinerary tab to focus on that day's location.</p>
+      <div id="map-full"></div>
+    </div>
+  </div>
+
+</div><!-- .layout -->
 
 <script>
-// ── Waypoints ──────────────────────────────────────────────────────────────
-const stops = [
-  { day: 1,  lat: 51.5074,  lon: -0.1278,  title: "London",          sub: "Fri 10 Jul · Arrive" },
-  { day: 2,  lat: 51.5074,  lon: -0.1278,  title: "London",          sub: "Sat 11 Jul · Landmarks + NHM 3pm" },
-  { day: 3,  lat: 51.5074,  lon: -0.1278,  title: "→ Bath",         sub: "Sun 12 Jul · Travel day" },
-  { day: 4,  lat: 51.3811,  lon: -2.3590,  title: "Bath",            sub: "Mon 13 Jul · Sightseeing" },
-  { day: 5,  lat: 51.3811,  lon: -2.3590,  title: "Bath",            sub: "Tue 14 Jul · Flexible Bath day" },
-  { day: 6,  lat: 50.2636,  lon: -5.0527,  title: "→ Cornwall",     sub: "Wed 15 Jul · Via Exeter" },
-  { day: 7,  lat: 50.2660,  lon: -5.0500,  title: "Cornwall",       sub: "Thu 16 Jul · Exploring" },
-  { day: 8,  lat: 50.6580,  lon: -4.7537,  title: "→ Exmoor",      sub: "Fri 17 Jul · Tintagel coastal drive" },
-  { day: 9,  lat: 52.0500,  lon: -3.3000,  title: "→ Glasbury",     sub: "Sat 18 Jul · Into Wales" },
-  { day: 10, lat: 51.9460,  lon: -4.3014,  title: "Pembrokeshire", sub: "Sun 19 Jul · Nature day" },
-  { day: 11, lat: 51.6739,  lon: -4.9043,  title: "Pembrokeshire",  sub: "Mon 20 Jul · ⚠️ Firing closures 7:30am–4:45pm" },
-  { day: 12, lat: 52.4147,  lon: -4.0816,  title: "→ Aberystwyth",  sub: "Tue 21 Jul · West Wales coast" },
-  { day: 13, lat: 53.0686,  lon: -4.0760,  title: "Snowdonia",      sub: "Wed 22 Jul · N. Wales scenery" },
-  { day: 14, lat: 53.4084,  lon: -2.9916,  title: "Liverpool",      sub: "Thu 23 Jul · Arrive evening" },
-  { day: 15, lat: 52.2870,  lon: -1.5337,  title: "→ Warwick",      sub: "Fri 24 Jul · Warwick stop" },
-  { day: 16, lat: 52.2053,  lon: 0.1218,   title: "Cambridge",      sub: "Sat 25 Jul · Return south" },
-  { day: 17, lat: 51.5074,  lon: -0.1278,  title: "London",         sub: "Sun 26 Jul · Fly home" },
+// ═══════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════
+
+const STOPS = [
+  { day:1,  lat:51.5074,  lon:-0.1278,  title:"🇬🇧 London",             sub:"Fri 10 Jul · Fly day",           type:"fly",   region:"London" },
+  { day:2,  lat:51.5074,  lon:-0.1278,  title:"🇬🇧 London",             sub:"Sat 11 Jul · Landmarks",         type:"base",  region:"London" },
+  { day:3,  lat:51.3811,  lon:-2.3590,  title:"→ Bath",                  sub:"Sun 12 Jul · 179 km · ~2.5h",  type:"drive", region:"Bath",   distKm:179, distMin:149 },
+  { day:4,  lat:51.3811,  lon:-2.3590,  title:"Bath",                    sub:"Mon 13 Jul · Sightseeing",       type:"base",  region:"Bath" },
+  { day:5,  lat:51.3811,  lon:-2.3590,  title:"Bath",                    sub:"Tue 14 Jul · Flexible day",      type:"scenic",region:"Bath" },
+  { day:6,  lat:50.4351,  lon:-4.9403,  title:"→ Cornwall",             sub:"Wed 15 Jul · 256 km · ~3.4h",   type:"drive", region:"Cornwall", distKm:256, distMin:203 },
+  { day:7,  lat:50.2660,  lon:-5.0500,  title:"Cornwall",                sub:"Thu 16 Jul · St Michael's Mount",type:"scenic",region:"Cornwall" },
+  { day:8,  lat:51.1798,  lon:-3.5235,  title:"→ Exmoor",               sub:"Fri 17 Jul · 206 km · ~2.6h",   type:"drive", region:"Exmoor", distKm:206, distMin:155 },
+  { day:9,  lat:52.0458,  lon:-3.2031,  title:"→ Wales / Glasbury",      sub:"Sat 18 Jul · 196 km · ~2.9h",   type:"drive", region:"Wales", distKm:196, distMin:174 },
+  { day:10, lat:51.6938,  lon:-4.9411,  title:"→ Pembroke Dock",         sub:"Sun 19 Jul · 149 km · ~2.1h",   type:"buffer",region:"Pembrokeshire", distKm:149, distMin:128 },
+  { day:11, lat:51.6938,  lon:-4.9411,  title:"Pembroke Dock",           sub:"Mon 20 Jul · Stackpole",         type:"scenic",region:"Pembrokeshire" },
+  { day:12, lat:53.4218,  lon:-4.3717,  title:"→ Anglesey / Bull Bay",   sub:"Tue 21 Jul · 287 km · ~4.6h",  type:"drive", region:"Anglesey", distKm:287, distMin:278 },
+  { day:13, lat:53.4218,  lon:-4.3717,  title:"Bull Bay / Anglesey",     sub:"Wed 22 Jul · South Stack",       type:"scenic",region:"Anglesey" },
+  { day:14, lat:53.3977,  lon:-2.9897,  title:"→ Liverpool",             sub:"Thu 23 Jul · 172 km · ~2.3h",   type:"drive", region:"Liverpool", distKm:172, distMin:138 },
+  { day:15, lat:52.2193,  lon:0.0871,   title:"→ Cambridge",              sub:"Fri 24 Jul · 308 km · ~3.6h",   type:"drive", region:"Cambridge", distKm:308, distMin:214 },
+  { day:16, lat:52.2053,  lon:0.1218,   title:"Cambridge → London",       sub:"Sat 25 Jul · 95 km · ~1.5h",    type:"drive", region:"London", distKm:95, distMin:92 },
 ];
 
-// ── Init map ────────────────────────────────────────────────────────────────
-const map = L.map('map', { zoomControl: true, scrollWheelZoom: true });
+const DETAILS = {
+  1:  { title:"Fri 10 Jul · KL → London", sub:"Fly day · Arrive & settle in",
+    accom:"—", bfast:"—",
+    activities:["Depart KL → London"],
+    food:[], restaurants:[], cafes:[], notes:[] },
+  2:  { title:"Sat 11 Jul · London", sub:"Landmarks day",
+    accom:"The Marloes, Earls Court", bfast:"❌ No",
+    activities:["Tower Bridge","Big Ben & Houses of Parliament","Buckingham Palace","Vivobarefoot store","NHM 3pm entry"],
+    food:[], restaurants:["Bancone (Soho?)"], cafes:["Arôme","Chestnut Bakery","Monmouth Coffee Company"], notes:[] },
+  3:  { title:"Sun 12 Jul · London → Bath", sub:"Drive day · 179 km · ~2.5h",
+    accom:"—", bfast:"—",
+    activities:["Drive to Bath","Flexi stop en route"],
+    food:[], restaurants:["Solina","Opa (2026 Greek menu)","Clayton's Kitchen (British fine dining)","Walled Garden, Chippenham?"],
+    cafes:["Colonna & Smalls","Landrace Bakery","cortado","sugarcane studio"], notes:[] },
+  4:  { title:"Mon 13 Jul · Bath", sub:"Sightseeing",
+    accom:"Stunning 5BR New Build, 30 Colliers Lane", bfast:"❌ No",
+    activities:["Royal Crescent","Roman Baths","Pulteney Bridge","Bath Abbey"],
+    food:[], restaurants:["Dinner: Scallop Shell (7.15pm)"], cafes:[], notes:[] },
+  5:  { title:"Tue 14 Jul · Bath", sub:"Flexible sightseeing",
+    accom:"— (same as 13 Jul)", bfast:"—",
+    activities:["Take pics at crescent"],
+    food:[], restaurants:["Beefy boys"], cafes:[], notes:["Mom's vegetarian day"] },
+  6:  { title:"Wed 15 Jul · Bath → Cornwall", sub:"Drive day · 256 km · ~3.4h",
+    accom:"Peaceful Relaxing Home, Retallack Resort", bfast:"❌ No",
+    activities:["Cheddar Gorge","Exeter cathedral"],
+    food:["Cornish pasties","Cornish cream tea (scone + jam + clotted cream)"], restaurants:[], cafes:[], notes:[] },
+  7:  { title:"Thu 16 Jul · Cornwall", sub:"⚠️ St Michael's Mount tide window 11.05–15.40",
+    accom:"— (same as 15 Jul)", bfast:"—",
+    activities:["St Michael's Mount ⚠️","Mousehole","St Ives & Godrevy (coastal cliffs)"],
+    food:[], restaurants:[], cafes:[], notes:["Check tide before visiting St Michael's Mount"] },
+  8:  { title:"Fri 17 Jul · St Columb → Exmoor", sub:"Drive day · 206 km · ~2.6h",
+    accom:"Dunkery Beacon Country House, Somerset", bfast:"❓ Confirm",
+    activities:["Tintagel Castle","Hartland Devon Heritage Coast","Valley of Rocks","Stargazing (weather permitting)"],
+    food:[], restaurants:[], cafes:[], notes:["🌟 Stargazing if weather clear"] },
+  9:  { title:"Sat 18 Jul · Exmoor → Wales / Glasbury", sub:"Drive day · 196 km · ~2.9h",
+    accom:"Foyles of Glasbury, Powys", bfast:"—",
+    activities:["Puzzle Wood (Forest of Dean)","Bannau Brycheiniog / Brecon Beacons NP","Pen-y-fan hike"],
+    food:[], restaurants:[], cafes:[],
+    notes:["Pen-y-fan routes:","1) Pont ar Daf CP ~6.4km / 2.5–3.5h (busy Sat)","2) Cwm Gwdi CP ~7.4km / 3–3.5h (quieter)","3) Nant Cwm Llwch CP ~8.5km / 3.5–4h (glacial lake)"] },
+  10: { title:"Sun 19 Jul · Glasbury → Pembroke Dock", sub:"Drive day · 149 km · ~2.1h",
+    accom:"4BR Coastal Getaway, 42 Clarence St, Pembroke Dock", bfast:"✅ Yes",
+    activities:["Wright's Food Emporium (en route)","Tenby","Pembroke Castle"],
+    food:["Welsh rarebit","Welsh cakes"], restaurants:["Wright's Food Emporium"], cafes:[], notes:[] },
+  11: { title:"Mon 20 Jul · Pembroke Dock", sub:"🌟 Best nature day",
+    accom:"— (same as 19 Jul)", bfast:"—",
+    activities:["Bosherston Lily Ponds","Broad Haven South","Stackpole Quay","Barafundle Bay (full trail)"],
+    food:[], restaurants:[], cafes:[], notes:["Lily ponds → Broad Haven → Barafundle Bay"] },
+  12: { title:"Tue 21 Jul · Pembroke Dock → Bull Bay", sub:"⚠️ Long drive · 287 km · ~4.6h",
+    accom:"Gwel Y Mor Duo, Hafan Glyd, Bull Bay, Anglesey", bfast:"❌ No",
+    activities:["Llyn Idwal / Cwm Idwal (Ogwen Valley)","Puffin Island? (check operator)"],
+    food:["Anglesey Eggs / Ŵyau Ynys Môn"], restaurants:[], cafes:[], notes:["⚠️ Long transfer day. Puffins may be gone late Jul."] },
+  13: { title:"Wed 22 Jul · Anglesey / Bull Bay", sub:"South Stack recommended afternoon / sunset",
+    accom:"— (same as 21 Jul)", bfast:"—",
+    activities:["South Stack Lighthouse & RSPB Reserve","Choughs, seabirds, lighthouse views"],
+    food:[], restaurants:[], cafes:[], notes:["Late afternoon / sunset recommended for best light"] },
+  14: { title:"Thu 23 Jul · Bull Bay → Liverpool", sub:"Drive day · 172 km · ~2.3h",
+    accom:"Staybridge Suites, 21 Keel Wharf, Liverpool", bfast:"✅ Yes",
+    activities:["Royal Albert Dock","Three Graces / Liver Building","Cavern Quarter","Liverpool Cathedral","Metropolitan Cathedral"],
+    food:[], restaurants:[], cafes:[], notes:["Port city with strong local identity — Beatles, working-class culture"] },
+  15: { title:"Fri 24 Jul · Liverpool → Cambridge", sub:"Drive day · 308 km · ~3.6h",
+    accom:"Hyatt Centric Cambridge, 37 Eddington Ave", bfast:"❌ No",
+    activities:["Punting (guided tour ~50 min)","Great St Mary's Church tower climb"],
+    food:[], restaurants:[], cafes:[], notes:["Tower views good at sunset"] },
+  16: { title:"Sat 25 Jul · Cambridge → London", sub:"Drive day · 95 km · ~1.5h · Return",
+    accom:"—", bfast:"—",
+    activities:["Return to London","Flex day / recovery"],
+    food:[], restaurants:[], cafes:[], notes:[] },
+};
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
-  maxZoom: 18,
-}).addTo(map);
-
-// ── Marker colours ──────────────────────────────────────────────────────────
-function markerColor(stop) {
-  if (stop.day === 1)  return { bg: '#27ae60', label: '▶' };
-  if (stop.day === 17) return { bg: '#c0392b', label: '✈' };
-  // Scenic / buffer days
-  if ([5,7,10,11,13].includes(stop.day)) return { bg: '#1976d2', label: stop.day };
-  // Drive days
-  if ([3,6,8,9,12,14,15,16].includes(stop.day)) return { bg: '#e67e22', label: stop.day };
-  // Base days
-  return { bg: '#2c5f8a', label: stop.day };
+// ═══════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════
+function showTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.querySelector('.tab-btn[onclick="showTab(\'' + name + '\')"]').classList.add('active');
+  if (name === 'map') {
+    setTimeout(() => { mapFull.invalidateSize(); }, 50);
+  }
 }
 
-function makeIcon(stop) {
-  const mc = markerColor(stop);
+// ═══════════════════════════════════════════════════════
+// DAY DETAIL DRAWER
+// ═══════════════════════════════════════════════════════
+function renderDetail(d, el) {
+  if (!d) { el.classList.remove('visible'); el.innerHTML = ''; return; }
+  let html = `<h3>${d.title}</h3><p class="sub">${d.sub}</p>`;
+  if (d.accom && d.accom !== '—') {
+    html += `<div class="accom-badge">
+      🏨 ${d.accom}
+      <span class="bfast" style="background:${d.bfast === '✅ Yes' ? '#c8e6c9' : d.bfast === '❌ No' ? '#f5f5f5' : '#fff9c4'};color:${d.bfast === '✅ Yes' ? '#2e7d32' : d.bfast === '❌ No' ? '#9e9e9e' : '#f57f17'}">Breakfast: ${d.bfast}</span>
+    </div>`;
+  }
+  function section(label, items) {
+    if (!items || items.length === 0) return '';
+    return `<div class="section"><div class="section-title">${label}</div><ul>${items.map(i => `<li>${i}</li>`).join('')}</ul></div>`;
+  }
+  html += section('🎯 Activities / Attractions', d.activities);
+  html += section('🍽 Restaurants', d.restaurants);
+  html += section('🥐 Cafes', d.cafes);
+  html += section('🍴 Local Food to Try', d.food);
+  if (d.notes && d.notes.length > 0) {
+    html += `<div class="section"><div class="section-title">📝 Notes</div><ul>${d.notes.map(n => `<li>${n}</li>`).join('')}</ul></div>`;
+  }
+  el.innerHTML = html;
+  el.classList.add('visible');
+}
+
+function showDayDetail(day) {
+  renderDetail(DETAILS[day], document.getElementById('dayDetail'));
+  // scroll to drawer
+  document.getElementById('dayDetail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function showItinDetail(day) {
+  renderDetail(DETAILS[day], document.getElementById('dayDetail'));
+  document.getElementById('dayDetail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ═══════════════════════════════════════════════════════
+// MAP SETUP
+// ═══════════════════════════════════════════════════════
+function markerColor(stop) {
+  const map = { fly:'#c0392b', base:'#2c5f8a', drive:'#e67e22', scenic:'#1976d2', buffer:'#7b1fa2' };
+  return map[stop.type] || '#2c5f8a';
+}
+
+function makeIcon(label, bg) {
   return L.divIcon({
-    className: '',
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor: [0, -16],
-    html: `<div style="
-      background:${mc.bg};
-      color:#fff;
-      width:30px;height:30px;
-      border-radius:50%;
-      border:2px solid #fff;
-      display:flex;align-items:center;justify-content:center;
-      font-size:12px;font-weight:700;
-      box-shadow:0 2px 6px rgba(0,0,0,0.35);
-    ">${mc.label}</div>`
+    className: '', iconSize: [30,30], iconAnchor: [15,15], popupAnchor: [0,-16],
+    html: `<div style="background:${bg};color:#fff;width:30px;height:30px;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.35)">${label}</div>`
   });
 }
 
-// ── Draw route + markers ────────────────────────────────────────────────────
-function drawRoute(activeDay) {
-  // Clear existing
+function drawMap(targetId, focusDay) {
+  const container = document.getElementById(targetId);
+  if (!container._map) {
+    container._map = L.map(targetId, { zoomControl: true, scrollWheelZoom: true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',
+      maxZoom: 18,
+    }).addTo(container._map);
+  }
+  const map = container._map;
   map.eachLayer(l => { if (l instanceof L.Polyline || l instanceof L.Marker) map.removeLayer(l); });
 
-  const lats = stops.map(s => [s.lat, s.lon]);
+  const lats = STOPS.map(s => [s.lat, s.lon]);
 
   // Route line
-  L.polyline(lats, {
-    color: '#2c5f8a',
-    weight: 3,
-    opacity: 0.7,
-    dashArray: '6, 8',
-  }).addTo(map);
+  L.polyline(lats, { color: '#2c5f8a', weight: 3, opacity: 0.65, dashArray: '6, 8' }).addTo(map);
 
-  // Markers
-  stops.forEach(stop => {
-    const mc = markerColor(stop);
-    const marker = L.marker([stop.lat, stop.lon], { icon: makeIcon(stop) })
-      .addTo(map)
-      .bindPopup(`<div class="popup-title">Day ${stop.day} · ${stop.title}</div><div class="popup-sub">${stop.sub}</div>`);
-
-    if (activeDay && stop.day === activeDay) {
-      marker.openPopup();
+  // Drive-day connectors (solid)
+  STOPS.forEach((s, i) => {
+    if (i < STOPS.length - 1 && s.distKm) {
+      L.polyline([[s.lat, s.lon], [STOPS[i+1].lat, STOPS[i+1].lon]],
+        { color: '#e67e22', weight: 3.5, opacity: 0.8 }).addTo(map);
     }
   });
 
-  // Fit bounds
-  if (!activeDay) {
-    map.fitBounds(L.polyline(lats).getBounds(), { padding: [30, 30] });
+  // Markers
+  STOPS.forEach(stop => {
+    const mc = markerColor(stop);
+    const marker = L.marker([stop.lat, stop.lon], { icon: makeIcon(stop.day, mc) })
+      .addTo(map)
+      .bindPopup(`<div class="popup-title">${stop.title}</div><div class="popup-sub">${stop.sub}</div>`);
+    if (focusDay && stop.day === focusDay) marker.openPopup();
+  });
+
+  if (focusDay) {
+    const s = STOPS.find(x => x.day === focusDay);
+    if (s) map.setView([s.lat, s.lon], 10);
   } else {
-    const s = stops.find(x => x.day === activeDay);
-    map.setView([s.lat, s.lon], 9);
+    map.fitBounds(L.polyline(lats).getBounds(), { padding: [30, 30] });
   }
 }
 
-drawRoute(null);
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+const map = L.map('map', { zoomControl: true, scrollWheelZoom: true });
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',
+  maxZoom: 18,
+}).addTo(map);
 
-// ── Row click ────────────────────────────────────────────────────────────────
-document.querySelectorAll('#itinTable tbody tr').forEach(row => {
+const lats = STOPS.map(s => [s.lat, s.lon]);
+
+// Route line
+L.polyline(lats, { color: '#2c5f8a', weight: 3, opacity: 0.65, dashArray: '6, 8' }).addTo(map);
+
+// Solid orange drive-day connectors
+STOPS.forEach((s, i) => {
+  if (i < STOPS.length - 1 && s.distKm) {
+    L.polyline([[s.lat, s.lon], [STOPS[i+1].lat, STOPS[i+1].lon]],
+      { color: '#e67e22', weight: 3.5, opacity: 0.8 }).addTo(map);
+  }
+});
+
+STOPS.forEach(stop => {
+  const mc = markerColor(stop);
+  L.marker([stop.lat, stop.lon], { icon: makeIcon(stop.day, mc) })
+    .addTo(map)
+    .bindPopup(`<div class="popup-title">${stop.title}</div><div class="popup-sub">${stop.sub}</div>`);
+});
+
+map.fitBounds(L.polyline(lats).getBounds(), { padding: [30, 30] });
+
+// Full map instance
+const mapFull = L.map('map-full', { zoomControl: true, scrollWheelZoom: true });
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',
+  maxZoom: 18,
+}).addTo(mapFull);
+drawMap('map-full', null);
+
+// Overview table row click
+document.querySelectorAll('#panel-overview table tbody tr').forEach(row => {
   row.addEventListener('click', () => {
-    document.querySelectorAll('#itinTable tbody tr').forEach(r => r.classList.remove('active'));
+    document.querySelectorAll('#panel-overview table tbody tr').forEach(r => r.classList.remove('active'));
     row.classList.add('active');
-
-    const day  = parseInt(row.dataset.day);
-    const lat  = parseFloat(row.dataset.lat);
-    const lon  = parseFloat(row.dataset.lon);
-    const title = row.dataset.title;
-    const sub   = row.dataset.sub;
-
-    map.setView([lat, lon], 10);
-    drawRoute(day);
-
-    // Update detail card (mobile)
-    document.getElementById('detailTitle').textContent = `Day ${day} · ${title}`;
-    document.getElementById('detailSub').textContent = sub;
-    document.getElementById('dayDetail').classList.add('visible');
+    const day = parseInt(row.getAttribute('onclick')?.match(/(\d+)/)?.[1] || 0);
+    if (day && DETAILS[day]) renderDetail(DETAILS[day], document.getElementById('dayDetail'));
+    // focus map
+    const s = STOPS.find(x => x.day === day);
+    if (s) map.setView([s.lat, s.lon], 10);
   });
 });
 
-// ── Cycling toggle ────────────────────────────────────────────────────────────
-document.getElementById('cyclingToggle').addEventListener('change', function() {
-  const notes = document.querySelectorAll('#itinTable tbody tr[data-day="5"] td.details');
-  if (this.checked) {
-    notes[0].innerHTML = 'Guided cycling tour AM · <strong>Bath sightseeing PM</strong><br><span style="color:#1976d2;font-size:0.75rem">🚴 Bath City &amp; Countryside Tour · 10am · ~3–3.5 hrs · ~18km · e-bike upgrade available · ~£39–£40 pp + £25 e-bike</span>';
-  } else {
-    notes[0].textContent = 'Flexible Bath day · food / cafes / extra sightseeing';
-  }
+// Itinerary table row click
+document.querySelectorAll('#panel-itin table tbody tr').forEach(row => {
+  row.addEventListener('click', () => {
+    document.querySelectorAll('#panel-itin table tbody tr').forEach(r => r.classList.remove('active'));
+    row.classList.add('active');
+    const day = parseInt(row.getAttribute('onclick')?.match(/(\d+)/)?.[1] || 0);
+    if (day && DETAILS[day]) {
+      renderDetail(DETAILS[day], document.getElementById('dayDetail'));
+      document.getElementById('dayDetail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    // focus full map
+    const s = STOPS.find(x => x.day === day);
+    if (s) {
+      showTab('map');
+      setTimeout(() => {
+        mapFull.setView([s.lat, s.lon], 10);
+        mapFull.eachLayer(l => { if (l instanceof L.Marker) l.closePopup(); });
+        mapFull.eachLayer(l => {
+          if (l instanceof L.Marker && l.getLatLng().lat === s.lat) l.openPopup();
+        });
+      }, 80);
+    }
+  });
 });
 </script>
 </body>
